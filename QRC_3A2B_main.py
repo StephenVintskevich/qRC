@@ -214,7 +214,7 @@ def evaluate_no_enc(depolarization_prob):
 ################### EVALUATION PROCEDURE #################################
 
 signal = np.load(path_main + '/data/complex_signal_9_9.npy')
-for offset in range(5, 10):
+for offset in range(0, 10):
     inp = signal[offset:]
     target = signal[:-offset]
     for p in np.linspace(0, 0.5, 51):
