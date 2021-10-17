@@ -23,6 +23,7 @@ else:
 
 # STEP_2 STANDART ACCURACY VS MEAN INFORMATION:
 # THIS TASK IS NOT READY!
+
 offset = 10
 loss = []
 mean_inf = []
@@ -38,4 +39,3 @@ for p in np.linspace(0, 0.5, 51):
     res = X_val @ W
     loss.append(np.linalg.norm(res - target[-1000:]))
     mean_inf.append(np.mean(inf))
-
