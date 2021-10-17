@@ -50,8 +50,9 @@ ent_transform = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(ent_transform, np.
 
 # Initial density matrix
 init_state = qt.tensor(*[qt.rand_ket(2) for _ in range(n_qubits_total)])
-init_state = init_state * init_state.dag()
-init_state = init_state.full()
+#init_state = init_state * init_state.dag()
+init_state_qt =init_state * init_state.dag()
+init_state = init_state_qt.full()
 
 # np.save(f"TF/init_state{n_qubits}.npy", init_state)
 # init_state = np.load(f"TF/init_state{n_qubits}.npy")
@@ -213,18 +214,20 @@ def evaluate_no_enc(depolarization_prob):
 
 ################### EVALUATION PROCEDURE #################################
 
-signal = np.load(path_main + '/data/complex_signal_9_9.npy')
-for offset in range(0, 10):
-    inp = signal[offset:]
-    target = signal[:-offset]
-    for p in np.linspace(0, 0.5, 51):
-        # Execution
-        print(p)
-        results, inf = evaluate(p)
+# signal = np.load(path_main + '/data/complex_signal_9_9.npy')
+# for offset in range(0, 10):
+#     inp = signal[offset:]
+#     target = signal[:-offset]
+#     for p in np.linspace(0, 0.5, 51):
+#         # Execution
+#         print(p)
+#         results, inf = evaluate(p)
+#
+#         np.save(
+#             f"/Users/stepanvinckevich/Desktop/IMPORTANT NOW/QIS QRL/CODE/QRC/results/InfCapacity/STMOffest{offset}Results{p}.npy",
+#             results)
+#         np.save(
+#             f"/Users/stepanvinckevich/Desktop/IMPORTANT NOW/QIS QRL/CODE/QRC/results/InfCapacity/STMOffest{offset}Information{p}.npy",
+#             inf)
 
-        np.save(
-            f"/Users/stepanvinckevich/Desktop/IMPORTANT NOW/QIS QRL/CODE/QRC/results/InfCapacity/STMOffest{offset}Results{p}.npy",
-            results)
-        np.save(
-            f"/Users/stepanvinckevich/Desktop/IMPORTANT NOW/QIS QRL/CODE/QRC/results/InfCapacity/STMOffest{offset}Information{p}.npy",
-            inf)
+
