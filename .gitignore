@@ -1,7 +1,8 @@
 /.ipynb_checkpoints
 /.idea
 /EVALUATION
-
+__pycashe__
+/__pycashe__
 .DS_Store
 DS_Store
 /DS_Store
