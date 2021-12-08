@@ -73,16 +73,32 @@ ent_transform = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(ent_transform, np.
 
 #################################################
 
-b = np.random.uniform(0, 1 / 3)
-c = np.random.uniform(0, 1 / 3)
+b = np.random.uniform(1/3, 1)
+c = np.random.uniform(0, 1/10)
+
+test = np.random.uniform(0,1)
 
 P0 = qt.basis(2, 0)
+pa0 = (qt.basis(2, 0) + qt.basis(2, 1))/np.sqrt(2)
 P1 = qt.basis(2, 1)
+pa1 = (qt.basis(2, 0) - qt.basis(2, 1))/np.sqrt(2)
 
 P00 = qt.tensor(P0, P0)
+pa00 = qt.tensor(pa0, pa0)
+q00 = pa00 * pa00.dag()
+q00 = q00.full()
 P01 = qt.tensor(P0, P1)
+pa01 = qt.tensor(pa0, pa1)
+q01 = pa01 * pa01.dag()
+q01 = q01.full()
 P10 = qt.tensor(P1, P0)
+pa10 = qt.tensor(pa1, pa0)
+q10 = pa10 * pa10.dag()
+q10 = q10.full()
 P11 = qt.tensor(P1, P1)
+pa11 = qt.tensor(pa1, pa1)
+q11 = pa11 * pa11.dag()
+q11 = q11.full()
 
 ##### SET THE MAIN BASIS
 
@@ -114,6 +130,17 @@ PB01 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B01, np.eye(2 ** (n_qubitsB
 PB10_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B10.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
 PB10 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B10, np.eye(2 ** (n_qubitsB - 1))))
 
+Q00_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q00.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
+Q00 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q00, np.eye(2 ** (n_qubitsB - 1))))
+
+Q01_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q01.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
+Q01 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q01, np.eye(2 ** (n_qubitsB - 1))))
+
+Q10_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q10.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
+Q10 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q10, np.eye(2 ** (n_qubitsB - 1))))
+
+Q11_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q11.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
+Q11 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q11, np.eye(2 ** (n_qubitsB - 1))))
 ######################
 
 # Initial density matrix
@@ -176,6 +203,18 @@ def entangled_channel_step(state, p, rand=True):
             state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
     return state / np.trace(state)
 
+def entangled_channel_AUX(state, p, rand=True):
+    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
+    if not rand:
+        state = ent_transform @ state @ ent_transform_dag
+    else:
+        state = Q00 @ state @ Q00_dag + Q11 @ state @ Q11_dag + Q10 @ state @ Q10_dag + Q01 @ state @ Q01_dag
+
+    if p != 0:
+        for site in [0, 1, 4, 5]:
+            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
+    return state / np.trace(state)
+
 
 def entangled_channel_step_obs(state, p, rand=True):
     """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
@@ -183,6 +222,17 @@ def entangled_channel_step_obs(state, p, rand=True):
         state = ent_transform_dag @ state @ ent_transform
     else:
         state = PB00_dag @ state @ PB00 + PB11_dag @ state @ PB11 + PB10_dag @ state @ PB10 + PB01_dag @ state @ PB01
+    if p != 0:
+        for site in [0, 1, 4, 5]:
+            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
+    return state
+
+def entangled_channel_step_obs_AUX(state, p, rand=True):
+    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
+    if not rand:
+        state = ent_transform_dag @ state @ ent_transform
+    else:
+        state = Q00_dag @ state @ Q00 + Q11_dag @ state @ Q11 + Q10_dag @ state @ Q10 + Q01_dag @ state @ Q01
     if p != 0:
         for site in [0, 1, 4, 5]:
             state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
