@@ -1,10 +1,7 @@
 import numpy as np
 from scipy.stats import entropy
-import sys
-from tqdm.notebook import tqdm
 import qutip as qt
 from qutip_qip.operations import cnot, hadamard_transform
-import scipy as sc
 
 path_main = '/Users/stepanvinckevich/Desktop/IMPORTANT NOW/QIS QRL/CODE/qRC/'
 
@@ -51,7 +48,10 @@ hamiltonian = qt.tensor(hamiltonianA, identityB) + qt.tensor(identityA, hamilton
 
 
 # Evolution step propagator
-propagator = qt.propagator(hamiltonian, timestep)
+#propagator = qt.propagator(hamiltonian, timestep)
+propagatorA = qt.propagator(hamiltonianA, timestep)
+propagatorB = qt.propagator(hamiltonianB, timestep)
+propagator = qt.tensor(propagatorA, propagatorB)
 propagator_dag = propagator.dag().full()
 propagator = propagator.full()
 
@@ -72,75 +72,30 @@ ent_transform_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(ent_transform.
 ent_transform = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(ent_transform, np.eye(2 ** (n_qubitsB - 1))))
 
 #################################################
+# SEPARABLE STANDARD BASIS:
+psi0 = qt.basis(2, 0)
+psi1 = qt.basis(2, 1)
+psi00 = qt.tensor(psi0, psi0)
+psi01 = qt.tensor(psi0, psi1)
+psi10 = qt.tensor(psi1, psi0)
+psi11 = qt.tensor(psi1, psi1)
 
-b = np.random.uniform(1/3, 1)
-c = np.random.uniform(0, 1/10)
+# SET OF STANDARD PROJECTORS:
+P00 = psi00 * psi00.dag()
+P01 = psi01 * psi01.dag()
+P10 = psi10 * psi10.dag()
+P11 = psi11 * psi11.dag()
+############################
 
-test = np.random.uniform(0,1)
+def qt_to_numpy_bridgeq(OP):
+    OP = OP.full()
+    OP_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(OP.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
+    OP = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(OP, np.eye(2 ** (n_qubitsB - 1))))
+    return OP, OP_dag
 
-P0 = qt.basis(2, 0)
-pa0 = (qt.basis(2, 0) + qt.basis(2, 1))/np.sqrt(2)
-P1 = qt.basis(2, 1)
-pa1 = (qt.basis(2, 0) - qt.basis(2, 1))/np.sqrt(2)
-
-P00 = qt.tensor(P0, P0)
-pa00 = qt.tensor(pa0, pa0)
-q00 = pa00 * pa00.dag()
-q00 = q00.full()
-P01 = qt.tensor(P0, P1)
-pa01 = qt.tensor(pa0, pa1)
-q01 = pa01 * pa01.dag()
-q01 = q01.full()
-P10 = qt.tensor(P1, P0)
-pa10 = qt.tensor(pa1, pa0)
-q10 = pa10 * pa10.dag()
-q10 = q10.full()
-P11 = qt.tensor(P1, P1)
-pa11 = qt.tensor(pa1, pa1)
-q11 = pa11 * pa11.dag()
-q11 = q11.full()
 
 ##### SET THE MAIN BASIS
 
-psi00 = b * P00 + np.sqrt(1 - b ** 2) * P11
-B00 = psi00 * psi00.dag()
-B00 = B00.full()
-
-psi11 = -b * P11 + np.sqrt(1 - b ** 2) * P00
-B11 = psi11 * psi11.dag()
-B11 = B11.full()
-
-psi01 = c * P01 + np.sqrt(1 - c ** 2) * P10
-B01 = psi01 * psi01.dag()
-B01 = B01.full()
-
-psi10 = -c * P10 + np.sqrt(1 - c ** 2) * P01
-B10 = psi10 * psi10.dag()
-B10 = B10.full()
-
-PB00_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B00.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-PB00 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B00, np.eye(2 ** (n_qubitsB - 1))))
-
-PB11_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B11.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-PB11 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B11, np.eye(2 ** (n_qubitsB - 1))))
-
-PB01_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B01.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-PB01 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B01, np.eye(2 ** (n_qubitsB - 1))))
-
-PB10_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B10.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-PB10 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(B10, np.eye(2 ** (n_qubitsB - 1))))
-
-Q00_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q00.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-Q00 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q00, np.eye(2 ** (n_qubitsB - 1))))
-
-Q01_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q01.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-Q01 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q01, np.eye(2 ** (n_qubitsB - 1))))
-
-Q10_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q10.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-Q10 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q10, np.eye(2 ** (n_qubitsB - 1))))
-
-Q11_dag = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q11.T.conj(), np.eye(2 ** (n_qubitsB - 1))))
-Q11 = np.kron(np.eye(2 ** (n_qubitsA - 1)), np.kron(q11, np.eye(2 ** (n_qubitsB - 1))))
 ######################
 
 # Initial density matrix
@@ -155,14 +110,11 @@ identity_total = np.eye(2 ** n_qubits_total)
 
 
 ####################### CORE. FUNCTIONS #############################
-
-#
 def get_depol_ops(site):
     sx = np.kron(np.eye(2 ** site), np.kron(np.array([[0., 1.], [1., 0.]]), np.eye(2 ** (n_qubits_total - site - 1))))
     sy = np.kron(np.eye(2 ** site), np.kron(np.array([[0., -1j], [1j, 0.]]), np.eye(2 ** (n_qubits_total - site - 1))))
     sz = np.kron(np.eye(2 ** site), np.kron(np.array([[1., 0.], [0., -1.]]), np.eye(2 ** (n_qubits_total - site - 1))))
     return sx, sy, sz
-
 
 def ptrace(mtx, hold):
     """Performs partial trace of state with only one site #hold remains"""
@@ -177,8 +129,7 @@ def evolution_step(state):
     """Simple application of evolution step propagator"""
     state = propagator @ state @ propagator_dag
     # assert np.abs(np.trace(state) - 1.) < tp_tol, f"Trace is not preserved.{np.trace(state)}"
-    return state / np.trace(state)
-
+    return state
 
 def evolution_step_obs(obs):
     """Simple application of evolution step propagator"""
@@ -191,53 +142,111 @@ depol_ops = [get_depol_ops(site) for site in range(n_qubits_total)]
 
 # FOR TESTING NONSELECTIVE MEASUREMENTS DONT FORGET TO CHANGE PARAMETER rand !!!!!
 
-def entangled_channel_step(state, p, rand=True):
-    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
-    if not rand:
-        state = ent_transform @ state @ ent_transform_dag
+def two_par_measurement_anzats(b,c, separable, *args):
+    if  separable == False:
+
+        # CONSTRUCTING ENTANGLED MEAS. BASIS:
+        phi00 = b * psi00 + np.sqrt(1 - b ** 2) * psi11
+        phi11 = np.sqrt(1 - b ** 2) * psi00 - b * psi11
+        phi01 = c * psi01 + np.sqrt(1 - c ** 2) * psi10
+        phi10 = np.sqrt(1 - c ** 2) * psi01 - c * psi10
+
+        OP00 = phi00 * phi00.dag()
+        OP11 = phi11 * phi11.dag()
+        OP10 = phi10 * phi10.dag()
+        OP01 = phi01 * phi01.dag()
+
     else:
-        state = PB00 @ state @ PB00_dag + PB11 @ state @ PB11_dag + PB10 @ state @ PB10_dag + PB01 @ state @ PB01_dag
+        if len(args) == 0:
+            # CONSTRUCTING SEPARABLE MEAS. BASIS:
+            psih0 = (qt.basis(2, 0) + qt.basis(2, 1)) / np.sqrt(2)
+            psih1 = (qt.basis(2, 0) - qt.basis(2, 1)) / np.sqrt(2)
+        else:
+            psih0 = args[0] * (qt.basis(2, 0) + qt.basis(2, 1) )/ np.sqrt(2)
+            psih1 = args[1] * (qt.basis(2, 0) - qt.basis(2, 1) )/ np.sqrt(2)
 
-    if p != 0:
-        for site in [0, 1, 4, 5]:
-            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
-    return state / np.trace(state)
+        phi00 = qt.tensor(psih0, psih0)
+        phi11 = qt.tensor(psih1, psih1)
+        phi01 = qt.tensor(psih0, psih1)
+        phi10 = qt.tensor(psih1, psih0)
 
-def entangled_channel_AUX(state, p, rand=True):
+        OP00 = phi00 * phi00.dag()
+        OP11 = phi11 * phi11.dag()
+        OP10 = phi10 * phi10.dag()
+        OP01 = phi01 * phi01.dag()
+
+    R00,R00_dag = qt_to_numpy_bridgeq(OP00)
+    R11, R11_dag = qt_to_numpy_bridgeq(OP11)
+    R01,R01_dag = qt_to_numpy_bridgeq(OP01)
+    R10, R10_dag = qt_to_numpy_bridgeq(OP10)
+
+    return [R00, R00_dag, R11, R11_dag, R01, R01_dag, R10, R10_dag]
+
+def entangled_channel_step_old(state,p, meas_operator_list):
     """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
-    if not rand:
-        state = ent_transform @ state @ ent_transform_dag
-    else:
-        state = Q00 @ state @ Q00_dag + Q11 @ state @ Q11_dag + Q10 @ state @ Q10_dag + Q01 @ state @ Q01_dag
-
-    if p != 0:
-        for site in [0, 1, 4, 5]:
-            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
-    return state / np.trace(state)
-
-
-def entangled_channel_step_obs(state, p, rand=True):
-    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
-    if not rand:
-        state = ent_transform_dag @ state @ ent_transform
-    else:
-        state = PB00_dag @ state @ PB00 + PB11_dag @ state @ PB11 + PB10_dag @ state @ PB10 + PB01_dag @ state @ PB01
+    # IT MUST BE ALREADY IN NUMPY
+    OP00 = meas_operator_list[0]
+    OP00_dag = meas_operator_list[1]
+    OP11 = meas_operator_list[2]
+    OP11_dag = meas_operator_list[3]
+    OP01 = meas_operator_list[4]
+    OP01_dag = meas_operator_list[5]
+    OP10 = meas_operator_list[6]
+    OP10_dag = meas_operator_list[7]
+    state = OP00 @ state @ OP00_dag + OP11 @ state @ OP11_dag + OP10 @ state @ OP10_dag + OP01 @ state @ OP01_dag
     if p != 0:
         for site in [0, 1, 4, 5]:
             state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
     return state
 
-def entangled_channel_step_obs_AUX(state, p, rand=True):
+def entangled_channel_step_obs_old(state, p, meas_operator_list):
     """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
-    if not rand:
-        state = ent_transform_dag @ state @ ent_transform
-    else:
-        state = Q00_dag @ state @ Q00 + Q11_dag @ state @ Q11 + Q10_dag @ state @ Q10 + Q01_dag @ state @ Q01
+    OP00 = meas_operator_list[0]
+    OP00_dag = meas_operator_list[1]
+    OP11 = meas_operator_list[2]
+    OP11_dag = meas_operator_list[3]
+    OP01 = meas_operator_list[4]
+    OP01_dag = meas_operator_list[5]
+    OP10 = meas_operator_list[6]
+    OP10_dag = meas_operator_list[7]
+    state = OP00_dag @ state @ OP00 + OP11_dag @ state @ OP11 + OP10_dag @ state @ OP10 + OP01_dag @ state @ OP01
     if p != 0:
         for site in [0, 1, 4, 5]:
             state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
     return state
 
+def entangled_channel_step(state,p,b,c, sep, *args):
+    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
+    # IT MUST BE ALREADY IN NUMPY
+    OP00,OP00_dag,OP11,OP11_dag,OP01,OP01_dag,OP10,OP10_dag = two_par_measurement_anzats(b,c, sep, *args)
+    state = OP00 @ state @ OP00_dag + OP11 @ state @ OP11_dag + OP10 @ state @ OP10_dag + OP01 @ state @ OP01_dag
+    if p != 0:
+        for site in [0, 1, 4, 5]:
+            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
+    return state
+
+def entangled_channel_step_unitary(state,p,b,c, sep, sig, *args):
+    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
+    # IT MUST BE ALREADY IN NUMPY
+    OP00,OP00_dag,OP11,OP11_dag,OP01,OP01_dag,OP10,OP10_dag = two_par_measurement_anzats(b, c, sep, *args)
+    encA = qt.Qobj(np.array([[sig, np.sqrt(1-sig**2)], [-np.sqrt(1-sig**2), sig]]))
+    encB = qt.identity(2)
+    enc_unitary, enc_unitary_dag = qt_to_numpy_bridgeq(qt.tensor(encA, encB))
+    state = OP00 @ state @ OP00_dag + OP11 @ state @ OP11_dag + OP10 @ state @ OP10_dag + OP01 @ state @ OP01_dag
+    state = enc_unitary @ state @ enc_unitary_dag
+    if p != 0:
+        for site in [0, 1, 4, 5]:
+            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
+    return state
+
+def entangled_channel_step_obs(state, p, b,c, sep = False, *args):
+    """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
+    OP00, OP00_dag, OP11, OP11_dag, OP01, OP01_dag, OP10, OP10_dag = two_par_measurement_anzats(b, c, sep, *args)
+    state = OP00_dag @ state @ OP00 + OP11_dag @ state @ OP11 + OP10_dag @ state @ OP10 + OP01_dag @ state @ OP01
+    if p != 0:
+        for site in [0, 1, 4, 5]:
+            state = (1 - p) * state + p / 3 * sum([depol_ops[site][i] @ state @ depol_ops[site][i] for i in range(3)])
+    return state
 
 tracing_krauss0 = np.concatenate(
     [np.eye(2 ** (n_qubits_total - 1)), np.zeros((2 ** (n_qubits_total - 1), 2 ** (n_qubits_total - 1)))], axis=1)
@@ -271,13 +280,17 @@ def encoding_step(state, inp):
     return state
 
 
+def encoding_unitary_step (state, inp):
+    # input it is a signal from 0 to 1:
+    # on can implement the following unitary:
+    pass
+
 def separated_measurement_step(state, site):
     """Nakajima pipeline"""
     # Qubit #site dm and Z observable application
     one_qubit_dm = ptrace(state, site)
     outcome = np.real(np.trace(local_obs @ one_qubit_dm))
     return state, outcome
-
 
 def get_mutual_information(state):
     axis_order = list(range(n_qubitsA, n_qubits_total)) + list(
