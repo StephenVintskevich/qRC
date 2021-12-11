@@ -7,7 +7,9 @@ path_main = '/Users/stepanvinckevich/Desktop/IMPORTANT NOW/QIS QRL/CODE/qRC/'
 
 #### SET RESRVOIRS PARAMS ##############
 # Number of qubits in reservoirs A and B
-n_qubitsA = 3
+
+#setup_list = [22!,25!,33!,43]
+n_qubitsA = 4
 k_power_A = 0
 
 n_qubitsB = 3
