@@ -34,12 +34,12 @@ class Pipeline:
         self.depol_ops = [get_depol_ops(site, self.n_qubits_total) for site in range(self.n_qubits_total)]
 
     def get_propagator(self, timestep):
-        hamiltonianA = qt.Qobj(np.load(f'/content/gdrive/My Drive/QRC/hamiltonians/hamiltonian{self.n_qubitsA}.npy'),
+        hamiltonianA = qt.Qobj(np.load(f'../hamiltonians/hamiltonian{self.n_qubitsA}.npy'),
                                dims=[[2] * self.n_qubitsA, [2] * self.n_qubitsA])
 
         identityA = qt.identity(2 ** self.n_qubitsA)
         identityA.dims = [[2] * self.n_qubitsA, [2] * self.n_qubitsA]
-        hamiltonianB = qt.Qobj(np.load(f'/content/gdrive/My Drive/QRC/hamiltonians/hamiltonian{self.n_qubitsB}.npy'),
+        hamiltonianB = qt.Qobj(np.load(f'../hamiltonians/hamiltonian{self.n_qubitsB}.npy'),
                                dims=[[2] * self.n_qubitsB, [2] * self.n_qubitsB])
 
         identityB = qt.identity(2 ** self.n_qubitsB)
