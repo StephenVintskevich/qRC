@@ -1,2 +1,6 @@
 # Computing with two quantum reservoirs connected via optimized two-qubit nonselective measurements
-This code supports numerical experiments for article https://arxiv.org/abs/2201.07969
+
+Currently, quantum reservoir computing is one of the most promising and experimentally accessible techniques for hybrid, quantum-classical machine learning. However, its applications are limited due to practical restrictions on the size of quantum systems and the influence of noise. Here we propose a novel approach to connect two quantum reservoirs in a network to overcome these issues and enhance their computing performance. To transfer information between quantum reservoirs, we perform optimized two-qubit non-selective measurements. We suggest a general heuristic optimization strategy based on tensor network language and matrix representation of two-qubit quantum channels specified for quantum reservoir computing. In addition, we introduce a single qubit purification channel and its optimization for further enhancement of quantum reservoir computing. We also demonstrate that the optimized channels applied to a seven-qubit network can efficiently transfer information between its parts with the resulting performance comparable to a network up to twenty-five qubits connected via a classical information link.
+
+This code supports numerical experiments for work https://arxiv.org/abs/2201.07969
+
