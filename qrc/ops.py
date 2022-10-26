@@ -175,3 +175,19 @@ class Purifier:
         state_out = (self.anzatz_tracing_krauss0 @ state_out @ self.anzatz_tracing_krauss0.T +
                      self.anzatz_tracing_krauss1 @ state_out @ self.anzatz_tracing_krauss1.T)
         return state_out
+
+
+class DoubleEncoder(Encoder):
+    def encoding_step(self, state, inp):
+        # First Encoding
+        state = super().encoding_step(state, inp[0])
+        axis_order = [self.n_qubits_total - 1, 2*self.n_qubits_total - 1] + list(range(self.n_qubits_total - 1)) + list(
+            range(self.n_qubits_total, 2*self.n_qubits_total - 1)
+        )
+        traced_dm = np.trace(np.reshape(
+            np.transpose(np.reshape(state, [2]*2*self.n_qubits_total), axis_order),
+            (2, 2, 2**(self.n_qubits_total-1), 2**(self.n_qubits_total-1))
+        ))
+        # Second Encoding
+        encoding_node_state = np.array([[np.sqrt(inp[1]), np.sqrt(1. - inp[1])]])
+        return np.kron(traced_dm, encoding_node_state.T @ encoding_node_state)

@@ -178,3 +178,32 @@ class NoPurificationPipeline(DefaultBridgePipeline):
                     result[n, m, site] = outcome
 
         return result
+
+
+class CorrelationMeasurementPipeline(DefaultBridgePipeline):
+    def evaluate(self, signal, depolarization_prob=0):
+        inp = signal[1000:1200]
+        result = np.zeros((len(inp), self.multiplexing, self.n_qubits_total))
+        state = self.init_state
+        self.bridge.set_bridge_unitary(self.alpha_bridge, self.rotations_bridge)
+
+        for i in range(1000):
+            state = self.encoder.encoding_step(state, signal[i])
+            state = self.evolution_step(state)
+            state = self.bridge.entangled_channel_step(state)
+            state = self.depolarization_step(state, depolarization_prob)
+
+        for n in range(len(inp)):
+            state = self.encoder.encoding_step(state, inp[n])
+            state = self.evolution_step(state)
+            state = self.bridge.entangled_channel_step(state)
+            state = self.depolarization_step(state, depolarization_prob)
+
+            for m in range(self.multiplexing):
+                state = self.evolution_step(state)
+
+                for site in range(self.n_qubits_total):
+                    state, outcome = separated_measurement_step(state, site, self.n_qubits_total)
+                    result[n, m, site] = outcome
+
+        return result
