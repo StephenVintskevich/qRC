@@ -134,10 +134,13 @@ class Bridge:
         bridge_unitary = qt.tensor(self.identity1, bridge_unitary, self.identity2)
         self.bridge_unitary = bridge_unitary.full()
         self.bridge_unitary_dag = bridge_unitary.dag().full()
+        self.P00 = self.bridge_unitary @ self.P00 @ self.bridge_unitary_dag
+        self.P01 = self.bridge_unitary @ self.P01 @ self.bridge_unitary_dag
+        self.P10 = self.bridge_unitary @ self.P10 @ self.bridge_unitary_dag
+        self.P11 = self.bridge_unitary @ self.P11 @ self.bridge_unitary_dag
 
     def entangled_channel_step(self, state):
-        """Application of entanglement channel with and depolarization channel with probability of depolarization 'p'"""
-        state = self.bridge_unitary_dag @ state @ self.bridge_unitary
+        """Application of entanglement channel"""
         state = self.P00 @ state @ self.P00 + self.P11 @ state @ self.P11 + self.P10 @ state @ self.P10 + self.P01 @ state @ self.P01
         return state
 
